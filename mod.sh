@@ -8,7 +8,7 @@ set -e
 # Configuration - Use environment variables if set, otherwise use defaults
 MOD_JAR="${MOD_JAR:-mod.jar}"  # Path to the Moderne CLI JAR
 MIN_VERSION="3.45.0"  # Set minimum required version (versions less than 3.45.0 do not generate telemetry metrics)
-TELEMETRY_DIR="$HOME/.moderne/cli/trace"  # Fixed telemetry directory
+TELEMETRY_DIR="$(pwd)/.moderne"  # Telemetry directory relative to current working directory
 TELEMETRY_ENDPOINT="${TELEMETRY_ENDPOINT:-}"  # Set your BI system endpoint URL
 
 # Color codes for output
@@ -67,14 +67,29 @@ check_version() {
 
 # Function to publish telemetry data
 publish_telemetry() {
+    local command_name="$1"
+    
+    # Skip if no command name provided
+    if [[ -z "$command_name" ]]; then
+        return 0
+    fi
+    
     if [[ ! -d "$TELEMETRY_DIR" ]]; then
         return 0
     fi
     
-    # Find all CSV files in the telemetry directory
-    shopt -s nullglob
-    CSV_FILES=("$TELEMETRY_DIR"/*.csv)
-    shopt -u nullglob
+    # Look for CSV files under the command subdirectory
+    local search_dir="$TELEMETRY_DIR/$command_name"
+    if [[ ! -d "$search_dir" ]]; then
+        return 0
+    fi
+    
+    # Find all CSV files in the search directory and subdirectories recursively
+    # Using find for compatibility with older bash versions (macOS default is 3.2)
+    CSV_FILES=()
+    while IFS= read -r -d '' file; do
+        CSV_FILES+=("$file")
+    done < <(find "$search_dir" -name "*.csv" -type f -print0 2>/dev/null)
     
     if [[ ${#CSV_FILES[@]} -eq 0 ]]; then
         return 0
@@ -84,6 +99,10 @@ publish_telemetry() {
     
     for csv_file in "${CSV_FILES[@]}"; do
         if [[ -f "$csv_file" ]]; then
+            parent_dir="$(dirname "$csv_file")"
+            # Get relative path from current directory
+            relative_path="${csv_file#$(pwd)/}"
+            echo "Processing: $relative_path" >&2
             # Only attempt to publish if endpoint is configured
             if [[ -n "$TELEMETRY_ENDPOINT" ]]; then
                 # Post CSV to BI system
@@ -91,16 +110,16 @@ publish_telemetry() {
                     -H "Content-Type: text/csv" \
                     --data-binary "@$csv_file" \
                     "$TELEMETRY_ENDPOINT" \
-                    --silent --fail --show-error 2>/dev/null; then
+                    --silent --fail --show-error >/dev/null 2>&1; then
                     
-                    # Delete CSV on successful post
-                    rm -f "$csv_file"
-                    echo -e "${GREEN}[OK] Published: $(basename "$csv_file")${NC}" >&2
+                    # Delete parent directory on successful post (e.g., 20250822153915-gemmm/)
+                    rm -rf "$parent_dir"
+                    echo -e "${GREEN}[OK] Published: $relative_path${NC}" >&2
                 else
-                    echo -e "${YELLOW}[WARN] Failed to publish: $(basename "$csv_file")${NC}" >&2
+                    echo -e "${YELLOW}[WARN] Failed to publish: $relative_path${NC}" >&2
                 fi
             else
-                echo -e "${YELLOW}Note: Telemetry endpoint not configured. Skipping: $(basename "$csv_file")${NC}" >&2
+                echo -e "${YELLOW}Note: Telemetry endpoint not configured. Skipping: $relative_path${NC}" >&2
             fi
         fi
     done
@@ -108,6 +127,9 @@ publish_telemetry() {
 
 # Main execution
 main() {
+    # Extract the first command argument (e.g., "build" from "mod.sh build .")
+    local command_name="$1"
+    
     # Check CLI version if minimum version is configured
     check_version
     
@@ -124,8 +146,11 @@ main() {
         exit 1
     fi
     
-    # Publish telemetry data after CLI execution
-    publish_telemetry
+    # Add a newline after mod output
+    echo >&2
+    
+    # Publish telemetry data after CLI execution, passing the command name
+    publish_telemetry "$command_name"
     
     # Exit with the same code as the CLI
     exit $CLI_EXIT_CODE
