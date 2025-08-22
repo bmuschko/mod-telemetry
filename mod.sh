@@ -95,9 +95,9 @@ publish_telemetry() {
                     
                     # Delete CSV on successful post
                     rm -f "$csv_file"
-                    echo -e "${GREEN} Published: $(basename "$csv_file")${NC}" >&2
+                    echo -e "${GREEN}[OK] Published: $(basename "$csv_file")${NC}" >&2
                 else
-                    echo -e "${YELLOW}� Failed to publish: $(basename "$csv_file")${NC}" >&2
+                    echo -e "${YELLOW}[WARN] Failed to publish: $(basename "$csv_file")${NC}" >&2
                 fi
             else
                 echo -e "${YELLOW}Note: Telemetry endpoint not configured. Skipping: $(basename "$csv_file")${NC}" >&2
