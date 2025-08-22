@@ -95,7 +95,7 @@ publish_telemetry() {
         return 0
     fi
     
-    echo "Publishing telemetry data..." >&2
+    echo "Publishing telemetry data to $TELEMETRY_ENDPOINT..." >&2
     
     for csv_file in "${CSV_FILES[@]}"; do
         if [[ -f "$csv_file" ]]; then
