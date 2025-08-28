@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-You need to use a Moderne CLI version >= 3.45.0. Earlier versions did not produce telemetry metrics. Copy the `mod.sh` into a desired directory. Add this directory to the `PATH` environment variable so that you can execute it from any path.
+You need to use a Moderne CLI version >= 3.45.0. Earlier versions did not produce telemetry metrics. Copy the [`mod.sh`](./mod.sh) into a desired directory. Add this directory to the `PATH` environment variable so that you can execute it from any path.
 
 ## Example usage
 
