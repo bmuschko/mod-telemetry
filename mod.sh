@@ -8,7 +8,7 @@ set -e
 # Configuration - Use environment variables if set, otherwise use defaults
 MOD_JAR="${MOD_JAR:-mod.jar}"  # Path to the Moderne CLI JAR
 MIN_VERSION="3.45.0"  # Set minimum required version (versions less than 3.45.0 do not generate telemetry metrics)
-TELEMETRY_DIR="$(pwd)/.moderne"  # Telemetry directory relative to current working directory
+TELEMETRY_DIR="$HOME/.moderne/cli/trace"  # Telemetry directory in user's home
 TELEMETRY_ENDPOINT="${TELEMETRY_ENDPOINT:-}"  # Set your BI system endpoint URL
 
 # Color codes for output
