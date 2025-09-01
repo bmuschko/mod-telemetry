@@ -27,3 +27,7 @@ mod.sh run . --recipe DependencyVulnerabilityCheck
 ```
 
 In the directory `~/.moderne/cli/trace`, you will find a `run` subdirectory. In that subdirectory, you will see a trace file, e.g. `trace-20250828085011-lTsq2.csv`.
+
+## ELK Stack Integration
+
+For setting up and using the ELK stack (Elasticsearch, Logstash, Kibana) to visualize telemetry data, see [elk/README.md](./elk/README.md).

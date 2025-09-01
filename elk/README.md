@@ -13,6 +13,9 @@ This guide explains how to set up and use the ELK stack (Elasticsearch, Logstash
 ### 1. Start the ELK Stack
 
 ```bash
+# Navigate to the elk directory
+cd elk
+
 # Start all ELK services
 docker-compose up -d
 
