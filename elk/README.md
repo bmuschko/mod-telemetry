@@ -94,8 +94,8 @@ curl -X POST http://localhost:8080 \
 
 ### Using Different Logstash Pipelines
 
-The setup includes a single Logstash pipeline configurations:
-- `bmoderne-metrics-pipeline.conf`: Processes build and run telemetry
+The setup includes a single Logstash pipeline configuration:
+- `moderne-metrics-pipeline.conf`: Processes build and run telemetry
 
 ### Customizing Index Settings
 
