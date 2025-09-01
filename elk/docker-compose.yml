@@ -41,7 +41,7 @@ services:
     image: docker.elastic.co/logstash/logstash:8.15.0
     container_name: logstash
     volumes:
-      - ./logstash/adaptive-metrics-pipeline.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./logstash/moderne-metrics-pipeline.conf:/usr/share/logstash/pipeline/logstash.conf:ro
       - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
     ports:
       - "8080:8080"
