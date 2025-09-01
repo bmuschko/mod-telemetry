@@ -83,12 +83,9 @@ curl -X POST http://localhost:8080 \
 
 1. Open Kibana at http://localhost:5601
 2. Navigate to **Dashboard** from the menu
-3. Open **Moderne Telemetry Overview** dashboard
-4. The dashboard includes:
-   - Build success rate pie chart
-   - Build duration distribution histogram
-   - Builds by tool breakdown
-   - Builds over time timeline
+3. Select the dashboard you want to view:
+   - **Moderne Build Metrics** - for build command metrics
+   - **Moderne Run Metrics** - for run command (recipe) metrics
 
 ## Advanced Configuration
 
