@@ -180,7 +180,7 @@ echo -e "${GREEN}✓ Run metrics index pattern created${NC}"
 
 # Import dashboards
 echo "Importing Kibana dashboards..."
-curl -X POST "kibana:5601/api/saved_objects/_import" \
+curl -X POST "kibana:5601/api/saved_objects/_import?overwrite=true" \
   -H "kbn-xsrf: true" \
   --form file=@/init/dashboards.ndjson \
   > /dev/null 2>&1
@@ -199,4 +199,4 @@ echo ""
 echo "To view dashboards:"
 echo "  1. Open http://localhost:5601"
 echo "  2. Navigate to Dashboard"
-echo "  3. Select 'Moderne Telemetry Overview'"
+echo "  3. Select 'Moderne Build Metrics' or 'Moderne Run Metrics'"

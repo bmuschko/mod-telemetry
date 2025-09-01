@@ -138,6 +138,18 @@ Edit `init/init-elk.sh` to modify:
 
 ## Troubleshooting
 
+### No telemetry data generated
+- Verify Moderne CLI version is >= 3.45.0: `java -jar $MOD_JAR --version`
+- Check if trace files are created: `ls -la ~/.moderne/cli/trace/`
+- For run commands, ensure the recipe executes successfully
+- Some commands may not generate telemetry in all scenarios
+
+### Run metrics not appearing
+- The `mod run` command generates telemetry in `~/.moderne/cli/trace/run/`
+- Verify the recipe actually executed and made changes
+- Check Logstash logs for processing: `docker-compose logs logstash | grep run`
+- Test with a sample recipe that's known to work: `mod run . --recipe FindTypes --recipe-option "fullyQualifiedTypeName=java.util.List"`
+
 ### Elasticsearch won't start
 - Ensure you have at least 4GB RAM available
 - Check Docker logs: `docker-compose logs elasticsearch`
@@ -145,10 +157,12 @@ Edit `init/init-elk.sh` to modify:
 ### Logstash not receiving data
 - Verify the endpoint URL matches the port in docker-compose.yml
 - Check Logstash logs: `docker-compose logs logstash`
+- Test connectivity: `curl -X POST http://localhost:8080 -H "Content-Type: text/csv" -d "test"`
 
 ### Kibana dashboards not loading
 - Ensure index patterns exist in Elasticsearch
-- Re-run the import script: `./kibana/import-dashboards.sh`
+- Check available indices: `curl http://localhost:9200/_cat/indices?v`
+- Verify dashboards are imported: `curl -s "http://localhost:5601/api/saved_objects/_find?type=dashboard" | jq`
 
 ## Stopping the Stack
 
