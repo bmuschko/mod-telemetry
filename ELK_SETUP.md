@@ -22,7 +22,7 @@ docker-compose ps
 
 The following services will be available:
 - **Elasticsearch**: http://localhost:9200
-- **Logstash**: http://localhost:8080 (HTTP input for build metrics), http://localhost:8081 (HTTP input for run metrics)
+- **Logstash**: http://localhost:8080 (HTTP input for telemetry data)
 - **Kibana**: http://localhost:5601
 
 ### 2. Automatic Setup
@@ -64,7 +64,7 @@ curl -X POST http://localhost:8080 \
 1. Run a Moderne CLI recipe:
 ```bash
 MOD_JAR="/path/to/moderne-cli.jar" \
-TELEMETRY_ENDPOINT="http://localhost:8081" \
+TELEMETRY_ENDPOINT="http://localhost:8080" \
 ./mod.sh run . --recipe DependencyVulnerabilityCheck
 ```
 
@@ -74,7 +74,7 @@ TELEMETRY_ENDPOINT="http://localhost:8081" \
 cd ~/.moderne/cli/trace/run
 
 # Send the trace file
-curl -X POST http://localhost:8081 \
+curl -X POST http://localhost:8080 \
   -H "Content-Type: text/csv" \
   --data-binary @trace-YYYYMMDDHHMMSS-xxxxx.csv
 ```
@@ -92,13 +92,13 @@ curl -X POST http://localhost:8081 \
 
 ## Advanced Configuration
 
-### Using Multiple Logstash Pipelines
+### Using Different Logstash Pipelines
 
-The setup includes two separate Logstash pipelines:
-- `build-metrics-pipeline.conf`: Processes build telemetry (port 8080)
-- `run-metrics-pipeline.conf`: Processes recipe run telemetry (port 8081)
+The setup includes two Logstash pipeline configurations:
+- `build-metrics-pipeline.conf`: Processes build telemetry
+- `run-metrics-pipeline.conf`: Processes recipe run telemetry
 
-To use both pipelines simultaneously, update the docker-compose.yml to mount both configuration files.
+To switch between pipelines, update the docker-compose.yml to mount the desired configuration file.
 
 ### Customizing Index Settings
 

@@ -22,7 +22,7 @@ The following example shows the command for running a recipe:
 
 ```
 MOD_JAR="/Users/bmuschko/.moderne/bin/moderne-cli-3.45.5.jar" \
-TELEMETRY_ENDPOINT="http://localhost:8081" \
+TELEMETRY_ENDPOINT="http://localhost:8080" \
 mod.sh run . --recipe DependencyVulnerabilityCheck
 ```
 
