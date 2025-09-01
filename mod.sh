@@ -44,9 +44,9 @@ check_version() {
     
     # Get current CLI version
     if [[ -f "$MOD_JAR" ]]; then
-        CURRENT_VERSION=$(java -jar "$MOD_JAR" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        CURRENT_VERSION=$(java -jar "$MOD_JAR" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | tail -1)
     elif command -v mod &> /dev/null; then
-        CURRENT_VERSION=$(mod --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        CURRENT_VERSION=$(mod --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | tail -1)
     else
         echo -e "${RED}Error: Moderne CLI not found${NC}" >&2
         exit 1
@@ -106,17 +106,19 @@ publish_telemetry() {
             # Only attempt to publish if endpoint is configured
             if [[ -n "$TELEMETRY_ENDPOINT" ]]; then
                 # Post CSV to BI system
-                if curl -X POST \
+                ERROR_MSG=$(curl -X POST \
                     -H "Content-Type: text/csv" \
                     --data-binary "@$csv_file" \
                     "$TELEMETRY_ENDPOINT" \
-                    --silent --fail --show-error >/dev/null 2>&1; then
-                    
+                    --silent --fail --show-error 2>&1)
+                
+                if [[ $? -eq 0 ]]; then
                     # Delete parent directory on successful post (e.g., 20250822153915-gemmm/)
                     rm -rf "$parent_dir"
                     echo -e "${GREEN}[OK] Published: $relative_path${NC}" >&2
                 else
                     echo -e "${YELLOW}[WARN] Failed to publish: $relative_path${NC}" >&2
+                    echo -e "${YELLOW}       Error: $ERROR_MSG${NC}" >&2
                 fi
             else
                 echo -e "${YELLOW}Note: Telemetry endpoint not configured. Skipping: $relative_path${NC}" >&2
