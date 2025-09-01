@@ -94,11 +94,8 @@ curl -X POST http://localhost:8080 \
 
 ### Using Different Logstash Pipelines
 
-The setup includes two Logstash pipeline configurations:
-- `build-metrics-pipeline.conf`: Processes build telemetry
-- `run-metrics-pipeline.conf`: Processes recipe run telemetry
-
-To switch between pipelines, update the docker-compose.yml to mount the desired configuration file.
+The setup includes a single Logstash pipeline configurations:
+- `bmoderne-metrics-pipeline.conf`: Processes build and run telemetry
 
 ### Customizing Index Settings
 
@@ -137,22 +134,6 @@ Edit `init/init-elk.sh` to modify:
 - `runDurationSeconds`: Total run duration
 
 ## Troubleshooting
-
-### No telemetry data generated
-- Verify Moderne CLI version is >= 3.45.0: `java -jar $MOD_JAR --version`
-- Check if trace files are created: `ls -la ~/.moderne/cli/trace/`
-- For run commands, ensure the recipe executes successfully
-- Some commands may not generate telemetry in all scenarios
-
-### Run metrics not appearing
-- The `mod run` command generates telemetry in `~/.moderne/cli/trace/run/`
-- Verify the recipe actually executed and made changes
-- Check Logstash logs for processing: `docker-compose logs logstash | grep run`
-- Test with a sample recipe that's known to work: `mod run . --recipe FindTypes --recipe-option "fullyQualifiedTypeName=java.util.List"`
-
-### Elasticsearch won't start
-- Ensure you have at least 4GB RAM available
-- Check Docker logs: `docker-compose logs elasticsearch`
 
 ### Logstash not receiving data
 - Verify the endpoint URL matches the port in docker-compose.yml
