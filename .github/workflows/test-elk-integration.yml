@@ -187,7 +187,7 @@ jobs:
         
         BI_ENDPOINT="http://localhost:8080" \
         MOD_JAR="$MOD_JAR" \
-        ../mod.sh build . --dry-run
+        ../mod.sh build .
         
         # Check that the command succeeded
         if [ $? -ne 0 ]; then
@@ -204,7 +204,7 @@ jobs:
         # Run a simple recipe with ELK endpoint
         BI_ENDPOINT="http://localhost:8080" \
         MOD_JAR="$MOD_JAR" \
-        ../mod.sh run . --recipe org.openrewrite.java.format.AutoFormat --dry-run
+        ../mod.sh run . --recipe org.openrewrite.java.format.AutoFormat
         
         # Check that the command succeeded
         if [ $? -ne 0 ]; then
@@ -246,7 +246,7 @@ jobs:
         BI_AUTH_USER="testuser" \
         BI_AUTH_PASS="testpass" \
         MOD_JAR="$MOD_JAR" \
-        ../mod.sh build . --dry-run
+        ../mod.sh build .
         
         if [ $? -ne 0 ]; then
           echo "mod.sh build with auth parameters failed!"
@@ -259,7 +259,7 @@ jobs:
         PROXY_USER="proxyuser" \
         PROXY_PASS="proxypass" \
         MOD_JAR="$MOD_JAR" \
-        ../mod.sh run . --recipe org.openrewrite.java.format.AutoFormat --dry-run
+        ../mod.sh run . --recipe org.openrewrite.java.format.AutoFormat
         
         if [ $? -ne 0 ]; then
           echo "mod.sh run with proxy parameters failed!"
