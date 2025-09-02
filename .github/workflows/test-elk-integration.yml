@@ -135,76 +135,16 @@ jobs:
         echo "=== Elasticsearch cluster health ==="
         curl -s http://localhost:9200/_cluster/health | jq . || true
     
-    - name: Create test project for build
+    - name: Clone test repository
       run: |
-        # Create a simple Java project for testing
-        mkdir -p test-project/src/main/java/com/example
-        cat > test-project/src/main/java/com/example/HelloWorld.java << 'EOF'
-        package com.example;
-        
-        public class HelloWorld {
-            public static void main(String[] args) {
-                System.out.println("Hello, World!");
-            }
-        }
-        EOF
-        
-        # Create a simple pom.xml
-        cat > test-project/pom.xml << 'EOF'
-        <?xml version="1.0" encoding="UTF-8"?>
-        <project xmlns="http://maven.apache.org/POM/4.0.0"
-                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-            <modelVersion>4.0.0</modelVersion>
-            
-            <groupId>com.example</groupId>
-            <artifactId>test-project</artifactId>
-            <version>1.0.0</version>
-            
-            <properties>
-                <maven.compiler.source>17</maven.compiler.source>
-                <maven.compiler.target>17</maven.compiler.target>
-                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-            </properties>
-            
-            <dependencies>
-                <dependency>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                    <version>4.13.2</version>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-        </project>
-        EOF
-        
-        # Create .gitignore
-        cat > test-project/.gitignore << 'EOF'
-        target/
-        .moderne/
-        *.class
-        *.jar
-        EOF
-        
-        # Initialize git repository
+        # Clone an actual open source repository for testing
+        git clone https://github.com/bmuschko/httpclient5.git test-project
         cd test-project
-        git config --global user.email "test@example.com"
-        git config --global user.name "Test User"
-        git init
-        git add .
-        git commit -m "Initial commit"
         
-        # Add a fake remote to make it look like a real repository
-        git remote add origin https://github.com/example/test-project.git
-        
-        echo "Git repository initialized for test project"
+        echo "Cloned repository structure:"
+        ls -la
         git status
         git remote -v
-        
-        # Verify the project structure
-        echo "Project structure:"
-        ls -la
     
     - name: Test mod.sh build command
       run: |
