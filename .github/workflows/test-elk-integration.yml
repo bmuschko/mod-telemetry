@@ -54,11 +54,16 @@ jobs:
         # Download the latest Moderne CLI JAR (version >= 3.45.0)
         MOD_VERSION="3.45.5"
         curl -L -o mod.jar "https://repo1.maven.org/maven2/io/moderne/moderne-cli/${MOD_VERSION}/moderne-cli-${MOD_VERSION}.jar"
-        echo "MOD_JAR=$PWD/mod.jar" >> $GITHUB_ENV
+        # Make the JAR accessible from anywhere
+        export MOD_JAR="$PWD/mod.jar"
+        echo "MOD_JAR=$MOD_JAR" >> $GITHUB_ENV
+        echo "Downloaded Moderne CLI to: $MOD_JAR"
+        ls -la mod.jar
     
     - name: Verify Moderne CLI version
       run: |
-        java -jar mod.jar --version
+        echo "MOD_JAR is set to: $MOD_JAR"
+        java -jar "$MOD_JAR" --version
     
     - name: Start ELK Stack
       working-directory: ./elk
@@ -170,8 +175,16 @@ jobs:
         # Make mod.sh executable
         chmod +x mod.sh
         
+        # Debug: Show current location and MOD_JAR
+        echo "Current directory: $PWD"
+        echo "MOD_JAR is: $MOD_JAR"
+        echo "mod.sh location: $PWD/mod.sh"
+        
         # Run build command with ELK endpoint
         cd test-project
+        echo "Now in: $PWD"
+        echo "Using MOD_JAR: $MOD_JAR"
+        
         BI_ENDPOINT="http://localhost:8080" \
         MOD_JAR="$MOD_JAR" \
         ../mod.sh build . --dry-run
