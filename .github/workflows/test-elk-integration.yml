@@ -221,24 +221,23 @@ jobs:
         echo "Now in: $PWD"
         echo "Using MOD_JAR: $MOD_JAR"
         
-        BUILD_OUTPUT=$(BI_ENDPOINT="http://localhost:8080" \
+        # Run the build command and capture exit code
+        BI_ENDPOINT="http://localhost:8080" \
         MOD_JAR="$MOD_JAR" \
-        ../mod.sh build . 2>&1)
-        
-        echo "$BUILD_OUTPUT"
+        ../mod.sh build . 2>&1 | tee build_output.txt
+        BUILD_EXIT_CODE=${PIPESTATUS[0]}
         
         # Check that the command succeeded
-        if [ $? -ne 0 ]; then
-          echo "mod.sh build command failed!"
+        if [ $BUILD_EXIT_CODE -ne 0 ]; then
+          echo "mod.sh build command failed with exit code $BUILD_EXIT_CODE"
           exit 1
         fi
         
         # Verify that 1 repository was built
-        if echo "$BUILD_OUTPUT" | grep -q "Built 1 repository\."; then
+        if grep -q "Built 1 repository\." build_output.txt; then
           echo "✓ Successfully built 1 repository"
         else
-          echo "ERROR: Expected to build 1 repository, but output was:"
-          echo "$BUILD_OUTPUT"
+          echo "ERROR: Expected to build 1 repository"
           exit 1
         fi
         
@@ -254,24 +253,22 @@ jobs:
         
         # Now run a simple recipe with ELK endpoint
         echo "Running recipe with telemetry..."
-        RUN_OUTPUT=$(BI_ENDPOINT="http://localhost:8080" \
+        BI_ENDPOINT="http://localhost:8080" \
         MOD_JAR="$MOD_JAR" \
-        ../mod.sh run . --recipe org.openrewrite.java.format.AutoFormat 2>&1)
-        
-        echo "$RUN_OUTPUT"
+        ../mod.sh run . --recipe org.openrewrite.java.format.AutoFormat 2>&1 | tee run_output.txt
+        RUN_EXIT_CODE=${PIPESTATUS[0]}
         
         # Check that the command succeeded
-        if [ $? -ne 0 ]; then
-          echo "mod.sh run command failed!"
+        if [ $RUN_EXIT_CODE -ne 0 ]; then
+          echo "mod.sh run command failed with exit code $RUN_EXIT_CODE"
           exit 1
         fi
         
         # Verify that results were produced for 1 repository
-        if echo "$RUN_OUTPUT" | grep -q "Produced results for 1 repository\."; then
+        if grep -q "Produced results for 1 repository\." run_output.txt; then
           echo "✓ Successfully produced results for 1 repository"
         else
-          echo "ERROR: Expected to produce results for 1 repository, but output was:"
-          echo "$RUN_OUTPUT"
+          echo "ERROR: Expected to produce results for 1 repository"
           exit 1
         fi
         
