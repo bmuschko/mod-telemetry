@@ -197,11 +197,16 @@ jobs:
         
         echo "mod.sh build command completed successfully"
     
-    - name: Test mod.sh run command
+    - name: Install recipe and test mod.sh run command
       run: |
         cd test-project
         
-        # Run a simple recipe with ELK endpoint
+        # Install the OpenRewrite recipe
+        echo "Installing OpenRewrite recipes..."
+        java -jar "$MOD_JAR" config recipes jar install org.openrewrite:rewrite-java:LATEST
+        
+        # Now run a simple recipe with ELK endpoint
+        echo "Running recipe with telemetry..."
         BI_ENDPOINT="http://localhost:8080" \
         MOD_JAR="$MOD_JAR" \
         ../mod.sh run . --recipe org.openrewrite.java.format.AutoFormat
