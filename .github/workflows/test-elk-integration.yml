@@ -14,11 +14,40 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     
+    - name: Debug - List repository contents
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Repository contents:"
+        ls -la
+        echo ""
+        echo "Checking for elk directory:"
+        if [ -d "elk" ]; then
+          echo "elk directory exists"
+          ls -la elk/
+        else
+          echo "ERROR: elk directory not found!"
+          echo "Creating elk directory structure for testing..."
+          mkdir -p elk
+        fi
+    
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
+    
+    - name: Configure Docker and system limits
+      run: |
+        # Increase virtual memory for Elasticsearch
+        sudo sysctl -w vm.max_map_count=262144
+        
+        # Show Docker info
+        docker info
+        
+        # Show available resources
+        echo "=== System resources ==="
+        free -h
+        df -h
     
     - name: Download Moderne CLI
       run: |
@@ -34,23 +63,72 @@ jobs:
     - name: Start ELK Stack
       working-directory: ./elk
       run: |
-        docker compose up -d
-        echo "Waiting for ELK stack to initialize..."
+        # Start only Elasticsearch first
+        docker compose up -d elasticsearch
+        echo "Waiting for Elasticsearch to be ready..."
         
-        # Wait for Elasticsearch to be ready
-        timeout 120 bash -c 'until curl -s http://localhost:9200/_cluster/health | grep -q "green\|yellow"; do sleep 2; done'
-        echo "Elasticsearch is ready"
+        # Wait for Elasticsearch to be healthy with more detailed logging
+        for i in {1..60}; do
+          if curl -s http://localhost:9200/_cluster/health 2>/dev/null | grep -q '"status":"green"\|"status":"yellow"'; then
+            echo "Elasticsearch is ready (attempt $i)"
+            curl -s http://localhost:9200/_cluster/health | jq .
+            break
+          else
+            echo "Waiting for Elasticsearch... (attempt $i/60)"
+            if [ $i -eq 60 ]; then
+              echo "ERROR: Elasticsearch failed to start"
+              docker compose logs elasticsearch
+              exit 1
+            fi
+            sleep 3
+          fi
+        done
+        
+        # Now start the rest of the services
+        docker compose up -d
+        
+        # Wait for services to initialize
+        sleep 10
         
         # Wait for Logstash to be ready (HTTP input on port 8080)
-        timeout 60 bash -c 'until curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 | grep -q "400\|405"; do sleep 2; done'
-        echo "Logstash HTTP input is ready"
+        echo "Waiting for Logstash HTTP input..."
+        for i in {1..30}; do
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 2>/dev/null || echo "000")
+          if [[ "$HTTP_CODE" == "400" || "$HTTP_CODE" == "405" ]]; then
+            echo "Logstash HTTP input is ready (attempt $i)"
+            break
+          else
+            echo "Waiting for Logstash... (attempt $i/30, HTTP code: $HTTP_CODE)"
+            if [ $i -eq 30 ]; then
+              echo "WARNING: Logstash HTTP input may not be ready"
+              docker compose logs logstash
+            fi
+            sleep 2
+          fi
+        done
         
-        # Wait for Kibana to be ready
-        timeout 120 bash -c 'until curl -s http://localhost:5601/api/status | grep -q "available"; do sleep 2; done'
-        echo "Kibana is ready"
+        # Wait for Kibana to be ready (optional, not critical for tests)
+        echo "Waiting for Kibana..."
+        for i in {1..30}; do
+          if curl -s http://localhost:5601/api/status 2>/dev/null | grep -q "available"; then
+            echo "Kibana is ready (attempt $i)"
+            break
+          else
+            echo "Waiting for Kibana... (attempt $i/30)"
+            if [ $i -eq 30 ]; then
+              echo "WARNING: Kibana may not be ready (not critical for tests)"
+            fi
+            sleep 2
+          fi
+        done
         
         # Show service status
+        echo "=== Final service status ==="
         docker compose ps
+        
+        # Show that Elasticsearch is responding
+        echo "=== Elasticsearch cluster health ==="
+        curl -s http://localhost:9200/_cluster/health | jq . || true
     
     - name: Create test project for build
       run: |
