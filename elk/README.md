@@ -44,7 +44,7 @@ docker-compose logs init
 1. Run a Moderne CLI build command:
 ```bash
 MOD_JAR="/path/to/moderne-cli.jar" \
-TELEMETRY_ENDPOINT="http://localhost:8080" \
+BI_ENDPOINT="http://localhost:8080" \
 ./mod.sh build .
 ```
 
@@ -64,7 +64,7 @@ curl -X POST http://localhost:8080 \
 1. Run a Moderne CLI recipe:
 ```bash
 MOD_JAR="/path/to/moderne-cli.jar" \
-TELEMETRY_ENDPOINT="http://localhost:8080" \
+BI_ENDPOINT="http://localhost:8080" \
 ./mod.sh run . --recipe DependencyVulnerabilityCheck
 ```
 

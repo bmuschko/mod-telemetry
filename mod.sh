@@ -9,7 +9,17 @@ set -e
 MOD_JAR="${MOD_JAR:-mod.jar}"  # Path to the Moderne CLI JAR
 MIN_VERSION="3.45.0"  # Set minimum required version (versions less than 3.45.0 do not generate telemetry metrics)
 TELEMETRY_DIR="$HOME/.moderne/cli/trace"  # Telemetry directory in user's home
-TELEMETRY_ENDPOINT="${TELEMETRY_ENDPOINT:-}"  # Set your BI system endpoint URL
+BI_ENDPOINT="${BI_ENDPOINT:-}"  # Set your BI system endpoint URL
+
+# Authentication configuration (optional)
+BI_AUTH_USER="${BI_AUTH_USER:-}"  # Username for basic auth
+BI_AUTH_PASS="${BI_AUTH_PASS:-}"  # Password for basic auth
+
+# Proxy configuration (optional)
+HTTP_PROXY="${HTTP_PROXY:-}"  # HTTP Proxy URL (e.g., http://proxy.example.com:8080)
+HTTPS_PROXY="${HTTPS_PROXY:-}"  # HTTPS Proxy URL (e.g., https://proxy.example.com:443)
+PROXY_USER="${PROXY_USER:-}"  # Proxy username
+PROXY_PASS="${PROXY_PASS:-}"  # Proxy password
 
 # Color codes for output
 RED='\033[0;31m'
@@ -95,7 +105,7 @@ publish_telemetry() {
         return 0
     fi
     
-    echo "Publishing telemetry data to $TELEMETRY_ENDPOINT..." >&2
+    echo "Publishing telemetry data to $BI_ENDPOINT..." >&2
     
     for csv_file in "${CSV_FILES[@]}"; do
         if [[ -f "$csv_file" ]]; then
@@ -104,13 +114,38 @@ publish_telemetry() {
             relative_path="${csv_file#$(pwd)/}"
             echo "Processing: $relative_path" >&2
             # Only attempt to publish if endpoint is configured
-            if [[ -n "$TELEMETRY_ENDPOINT" ]]; then
-                # Post CSV to BI system
-                ERROR_MSG=$(curl -X POST \
-                    -H "Content-Type: text/csv" \
-                    --data-binary "@$csv_file" \
-                    "$TELEMETRY_ENDPOINT" \
-                    --silent --fail --show-error 2>&1)
+            if [[ -n "$BI_ENDPOINT" ]]; then
+                # Build curl command with optional parameters
+                CURL_CMD=(curl -X POST -H "Content-Type: text/csv" --data-binary "@$csv_file")
+                
+                # Add basic authentication if configured
+                if [[ -n "$BI_AUTH_USER" && -n "$BI_AUTH_PASS" ]]; then
+                    CURL_CMD+=(--user "$BI_AUTH_USER:$BI_AUTH_PASS")
+                fi
+                
+                # Add proxy configuration if configured
+                # Determine which proxy to use based on endpoint URL
+                PROXY_URL=""
+                if [[ "$BI_ENDPOINT" == https://* && -n "$HTTPS_PROXY" ]]; then
+                    PROXY_URL="$HTTPS_PROXY"
+                elif [[ -n "$HTTP_PROXY" ]]; then
+                    PROXY_URL="$HTTP_PROXY"
+                fi
+                
+                if [[ -n "$PROXY_URL" ]]; then
+                    CURL_CMD+=(--proxy "$PROXY_URL")
+                    
+                    # Add proxy authentication if configured
+                    if [[ -n "$PROXY_USER" && -n "$PROXY_PASS" ]]; then
+                        CURL_CMD+=(--proxy-user "$PROXY_USER:$PROXY_PASS")
+                    fi
+                fi
+                
+                # Add endpoint and common options
+                CURL_CMD+=("$BI_ENDPOINT" --silent --fail --show-error)
+                
+                # Execute curl command
+                ERROR_MSG=$("${CURL_CMD[@]}" 2>&1)
                 
                 if [[ $? -eq 0 ]]; then
                     # Delete parent directory on successful post (e.g., 20250822153915-gemmm/)
