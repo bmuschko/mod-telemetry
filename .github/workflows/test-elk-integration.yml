@@ -34,7 +34,7 @@ jobs:
     - name: Start ELK Stack
       working-directory: ./elk
       run: |
-        docker-compose up -d
+        docker compose up -d
         echo "Waiting for ELK stack to initialize..."
         
         # Wait for Elasticsearch to be ready
@@ -50,7 +50,7 @@ jobs:
         echo "Kibana is ready"
         
         # Show service status
-        docker-compose ps
+        docker compose ps
     
     - name: Create test project for build
       run: |
@@ -181,22 +181,22 @@ jobs:
       if: failure()
       run: |
         echo "=== Docker Compose Status ==="
-        cd elk && docker-compose ps
+        cd elk && docker compose ps
         
         echo "=== Elasticsearch Logs ==="
-        cd elk && docker-compose logs --tail=50 elasticsearch
+        cd elk && docker compose logs --tail=50 elasticsearch
         
         echo "=== Logstash Logs ==="
-        cd elk && docker-compose logs --tail=50 logstash
+        cd elk && docker compose logs --tail=50 logstash
         
         echo "=== Kibana Logs ==="
-        cd elk && docker-compose logs --tail=50 kibana
+        cd elk && docker compose logs --tail=50 kibana
         
         echo "=== Init Logs ==="
-        cd elk && docker-compose logs init
+        cd elk && docker compose logs init
     
     - name: Stop ELK Stack
       if: always()
       working-directory: ./elk
       run: |
-        docker-compose down -v
+        docker compose down -v
