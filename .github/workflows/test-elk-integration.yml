@@ -194,8 +194,13 @@ jobs:
         git init
         git add .
         git commit -m "Initial commit"
+        
+        # Add a fake remote to make it look like a real repository
+        git remote add origin https://github.com/example/test-project.git
+        
         echo "Git repository initialized for test project"
         git status
+        git remote -v
         
         # Verify the project structure
         echo "Project structure:"
