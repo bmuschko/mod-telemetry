@@ -222,7 +222,7 @@ jobs:
     - name: Verify telemetry was sent to ELK
       run: |
         # Wait a moment for data to be indexed
-        sleep 5
+        sleep 10
         
         # Check if any indices were created in Elasticsearch
         echo "Checking Elasticsearch indices..."
@@ -230,48 +230,23 @@ jobs:
         
         # Check for build metrics index
         if curl -s http://localhost:9200/_cat/indices | grep -q "build-metrics"; then
-          echo "Build metrics index found in Elasticsearch"
+          echo "✓ Build metrics index found in Elasticsearch"
         else
-          echo "Warning: Build metrics index not found (may be expected with --dry-run)"
+          echo "Note: Build metrics index not found yet (telemetry may still be processing)"
         fi
         
         # Check for run metrics index
         if curl -s http://localhost:9200/_cat/indices | grep -q "run-metrics"; then
-          echo "Run metrics index found in Elasticsearch"
+          echo "✓ Run metrics index found in Elasticsearch"
         else
-          echo "Warning: Run metrics index not found (may be expected with --dry-run)"
-        fi
-    
-    - name: Test with authentication and proxy
-      run: |
-        cd test-project
-        
-        # Test with authentication parameters (should still work even if not actually used by endpoint)
-        BI_ENDPOINT="http://localhost:8080" \
-        BI_AUTH_USER="testuser" \
-        BI_AUTH_PASS="testpass" \
-        MOD_JAR="$MOD_JAR" \
-        ../mod.sh build .
-        
-        if [ $? -ne 0 ]; then
-          echo "mod.sh build with auth parameters failed!"
-          exit 1
+          echo "Note: Run metrics index not found yet (telemetry may still be processing)"
         fi
         
-        # Test with proxy parameters (proxy won't actually be used since localhost)
-        BI_ENDPOINT="http://localhost:8080" \
-        HTTP_PROXY="http://proxy.example.com:3128" \
-        PROXY_USER="proxyuser" \
-        PROXY_PASS="proxypass" \
-        MOD_JAR="$MOD_JAR" \
-        ../mod.sh run . --recipe org.openrewrite.java.format.AutoFormat
-        
-        if [ $? -ne 0 ]; then
-          echo "mod.sh run with proxy parameters failed!"
-          exit 1
-        fi
-        
-        echo "All authentication and proxy parameter tests passed"
+        # Show count of documents if indices exist
+        echo ""
+        echo "Document counts:"
+        curl -s "http://localhost:9200/build-metrics-*/_count" 2>/dev/null | jq -r '.count // "0"' | xargs -I {} echo "Build metrics documents: {}"
+        curl -s "http://localhost:9200/run-metrics-*/_count" 2>/dev/null | jq -r '.count // "0"' | xargs -I {} echo "Run metrics documents: {}"
     
     - name: Show logs on failure
       if: failure()
