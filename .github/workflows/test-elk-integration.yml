@@ -240,8 +240,26 @@ jobs:
         # Show count of documents if indices exist
         echo ""
         echo "Document counts:"
-        curl -s "http://localhost:9200/build-metrics-*/_count" 2>/dev/null | jq -r '.count // "0"' | xargs -I {} echo "Build metrics documents: {}"
-        curl -s "http://localhost:9200/run-metrics-*/_count" 2>/dev/null | jq -r '.count // "0"' | xargs -I {} echo "Run metrics documents: {}"
+        BUILD_COUNT=$(curl -s "http://localhost:9200/build-metrics-*/_count" 2>/dev/null | jq -r '.count // 0')
+        RUN_COUNT=$(curl -s "http://localhost:9200/run-metrics-*/_count" 2>/dev/null | jq -r '.count // 0')
+        
+        echo "Build metrics documents: $BUILD_COUNT"
+        echo "Run metrics documents: $RUN_COUNT"
+        
+        # Verify exactly 1 document was indexed for each type
+        if [ "$BUILD_COUNT" -eq 1 ]; then
+          echo "✓ Build metrics successfully indexed (1 document)"
+        else
+          echo "ERROR: Expected 1 build metrics document, but found $BUILD_COUNT"
+          exit 1
+        fi
+        
+        if [ "$RUN_COUNT" -eq 1 ]; then
+          echo "✓ Run metrics successfully indexed (1 document)"
+        else
+          echo "ERROR: Expected 1 run metrics document, but found $RUN_COUNT"
+          exit 1
+        fi
     
     - name: Show logs on failure
       if: failure()
