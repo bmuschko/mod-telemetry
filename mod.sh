@@ -172,11 +172,15 @@ main() {
     
     # Execute the Moderne CLI with forwarded arguments
     if [[ -f "$MOD_JAR" ]]; then
-        java -jar "$MOD_JAR" "$@"
-        CLI_EXIT_CODE=$?
+        java -jar "$MOD_JAR" "$@" 2>&1 | while IFS= read -r line; do
+            printf "\r\033[K%s" "$line" >&2
+        done
+        CLI_EXIT_CODE=${PIPESTATUS[0]}
     elif command -v mod &> /dev/null; then
-        mod "$@"
-        CLI_EXIT_CODE=$?
+        mod "$@" 2>&1 | while IFS= read -r line; do
+            printf "\r\033[K%s" "$line" >&2
+        done
+        CLI_EXIT_CODE=${PIPESTATUS[0]}
     else
         echo -e "${RED}Error: Moderne CLI not found at $MOD_JAR${NC}" >&2
         echo "Please set the correct path to the Moderne CLI JAR file" >&2
