@@ -116,7 +116,7 @@ publish_telemetry() {
             # Only attempt to publish if endpoint is configured
             if [[ -n "$BI_ENDPOINT" ]]; then
                 # Build curl command with optional parameters
-                CURL_CMD=(curl -X POST -H "Content-Type: text/csv" --data-binary "@$csv_file")
+                CURL_CMD=(curl -X POST -H "Content-Type: text/csv" -H "X-Event-Type: $command_name" --data-binary "@$csv_file")
                 
                 # Add basic authentication if configured
                 if [[ -n "$BI_AUTH_USER" && -n "$BI_AUTH_PASS" ]]; then
