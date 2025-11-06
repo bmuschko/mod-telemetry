@@ -162,11 +162,35 @@ publish_telemetry() {
     done
 }
 
+# Function to determine trace directory name based on command
+get_trace_directory() {
+    local first_arg="$1"
+    local second_arg="$2"
+
+    # Special handling for "mod git" commands
+    if [[ "$first_arg" == "git" ]]; then
+        # Map "git clone" to "sync" directory
+        if [[ "$second_arg" == "clone" ]]; then
+            echo "sync"
+        else
+            # For other git commands, use the subcommand name (apply, push, sync, etc.)
+            echo "$second_arg"
+        fi
+    else
+        # For non-git commands, use the first argument
+        echo "$first_arg"
+    fi
+}
+
 # Main execution
 main() {
     # Extract the first command argument (e.g., "build" from "mod.sh build .")
     local command_name="$1"
-    
+    local second_arg="$2"
+
+    # Determine the trace directory name
+    local trace_dir_name=$(get_trace_directory "$command_name" "$second_arg")
+
     # Check CLI version if minimum version is configured
     check_version
     
@@ -189,10 +213,10 @@ main() {
     
     # Add a newline after mod output
     echo >&2
-    
-    # Publish telemetry data after CLI execution, passing the command name
-    publish_telemetry "$command_name"
-    
+
+    # Publish telemetry data after CLI execution, passing the trace directory name
+    publish_telemetry "$trace_dir_name"
+
     # Exit with the same code as the CLI
     exit $CLI_EXIT_CODE
 }
