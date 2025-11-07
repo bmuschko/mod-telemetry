@@ -52,7 +52,7 @@ jobs:
     - name: Download Moderne CLI
       run: |
         # Download the latest Moderne CLI JAR (version >= 3.45.0)
-        MOD_VERSION="3.45.5"
+        MOD_VERSION="3.50.1"
         curl -L -o mod.jar "https://repo1.maven.org/maven2/io/moderne/moderne-cli/${MOD_VERSION}/moderne-cli-${MOD_VERSION}.jar"
         # Make the JAR accessible from anywhere
         export MOD_JAR="$PWD/mod.jar"
