@@ -254,7 +254,9 @@ jobs:
 
         # Check Logstash logs for any data received
         echo "=== Checking Logstash logs for incoming data ==="
-        docker compose -f ../elk/docker-compose.yml logs logstash --tail=100 | grep -i "buildId\|runId" || echo "No build or run metrics found in Logstash logs"
+        cd ..
+        docker compose -f elk/docker-compose.yml logs logstash --tail=100 | grep -i "buildId\|runId" || echo "No build or run metrics found in Logstash logs"
+        cd test-project
         echo ""
 
         # Check for build metrics index
