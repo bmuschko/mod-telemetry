@@ -263,21 +263,22 @@ jobs:
     
     - name: Show logs on failure
       if: failure()
+      working-directory: ./elk
       run: |
         echo "=== Docker Compose Status ==="
-        cd elk && docker compose ps
-        
+        docker compose ps
+
         echo "=== Elasticsearch Logs ==="
-        cd elk && docker compose logs --tail=50 elasticsearch
-        
+        docker compose logs --tail=50 elasticsearch
+
         echo "=== Logstash Logs ==="
-        cd elk && docker compose logs --tail=50 logstash
-        
+        docker compose logs --tail=50 logstash
+
         echo "=== Kibana Logs ==="
-        cd elk && docker compose logs --tail=50 kibana
-        
+        docker compose logs --tail=50 kibana
+
         echo "=== Init Logs ==="
-        cd elk && docker compose logs init
+        docker compose logs init
     
     - name: Stop ELK Stack
       if: always()
