@@ -172,7 +172,7 @@ jobs:
           echo "mod.sh build command failed with exit code $BUILD_EXIT_CODE"
           exit 1
         fi
-        
+
         # Verify that 1 repository was built
         if grep -q "Built 1 repository\." build_output.txt; then
           echo "✓ Successfully built 1 repository"
@@ -180,8 +180,22 @@ jobs:
           echo "ERROR: Expected to build 1 repository"
           exit 1
         fi
-        
+
         echo "mod.sh build command completed successfully"
+
+        # Debug: Check if telemetry files were generated
+        echo ""
+        echo "=== Debugging telemetry generation ==="
+        echo "Checking $HOME/.moderne/cli/trace directory..."
+        if [ -d "$HOME/.moderne/cli/trace" ]; then
+          echo "Trace directory exists. Contents:"
+          find "$HOME/.moderne/cli/trace" -type f -name "*.csv" 2>/dev/null || echo "No CSV files found"
+          echo ""
+          echo "Full directory structure:"
+          ls -laR "$HOME/.moderne/cli/trace" | head -50
+        else
+          echo "ERROR: Trace directory does not exist at $HOME/.moderne/cli/trace"
+        fi
     
     - name: Install recipe and test mod.sh run command
       run: |
@@ -203,7 +217,7 @@ jobs:
           echo "mod.sh run command failed with exit code $RUN_EXIT_CODE"
           exit 1
         fi
-        
+
         # Verify that results were produced for 1 repository
         if grep -q "Produced results for 1 repository\." run_output.txt; then
           echo "✓ Successfully produced results for 1 repository"
@@ -211,8 +225,22 @@ jobs:
           echo "ERROR: Expected to produce results for 1 repository"
           exit 1
         fi
-        
+
         echo "mod.sh run command completed successfully"
+
+        # Debug: Check if telemetry files were generated
+        echo ""
+        echo "=== Debugging telemetry generation after run ==="
+        echo "Checking $HOME/.moderne/cli/trace directory..."
+        if [ -d "$HOME/.moderne/cli/trace" ]; then
+          echo "Trace directory exists. Contents:"
+          find "$HOME/.moderne/cli/trace" -type f -name "*.csv" 2>/dev/null || echo "No CSV files found"
+          echo ""
+          echo "Full directory structure:"
+          ls -laR "$HOME/.moderne/cli/trace" | head -50
+        else
+          echo "ERROR: Trace directory does not exist at $HOME/.moderne/cli/trace"
+        fi
     
     - name: Verify telemetry was sent to ELK
       run: |
@@ -222,14 +250,20 @@ jobs:
         # Check if any indices were created in Elasticsearch
         echo "Checking Elasticsearch indices..."
         curl -s http://localhost:9200/_cat/indices?v
-        
+        echo ""
+
+        # Check Logstash logs for any data received
+        echo "=== Checking Logstash logs for incoming data ==="
+        docker compose -f ../elk/docker-compose.yml logs logstash --tail=100 | grep -i "buildId\|runId" || echo "No build or run metrics found in Logstash logs"
+        echo ""
+
         # Check for build metrics index
         if curl -s http://localhost:9200/_cat/indices | grep -q "build-metrics"; then
           echo "✓ Build metrics index found in Elasticsearch"
         else
           echo "Note: Build metrics index not found yet (telemetry may still be processing)"
         fi
-        
+
         # Check for run metrics index
         if curl -s http://localhost:9200/_cat/indices | grep -q "run-metrics"; then
           echo "✓ Run metrics index found in Elasticsearch"
